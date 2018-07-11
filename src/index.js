@@ -175,15 +175,7 @@ export default class ServiceWorkerPlugin {
 
     assets = validatePaths(assets, this.options)
 
-    let minify;
-
-    if (Number(webpack.version) >= 4) {
-      minify = compiler.options.optimization && compiler.options.optimization.minimize
-    } else {
-      minify = (compiler.options.plugins || []).some(plugin => {
-        return plugin instanceof webpack.optimize.UglifyJsPlugin
-      })
-    }
+    let minify = compiler.options.optimization && compiler.options.optimization.minimize
 
     const serviceWorkerOption = this.options.transformOptions({
       assets,
