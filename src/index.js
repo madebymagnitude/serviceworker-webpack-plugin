@@ -56,12 +56,19 @@ export default class ServiceWorkerPlugin {
   apply(compiler) {
     const runtimePath = path.resolve(__dirname, './runtime.js')
 
+	// Convert absolute filename into relative so that webpack can
+	// generate it at correct location
+	const filename = this.options.filename;
+	if (path.resolve(filename) === path.normalize(filename)) {
+		this.options.filename = path.relative(compiler.options.output.path, filename);
+	}
+
     compiler.plugin('normal-module-factory', nmf => {
       nmf.plugin('after-resolve', (result, callback) => {
         // Hijack the original module
         if (result.resource === runtimePath) {
           const data = {
-            scriptURL: path.join(this.options.publicPath, this.options.filename),
+            scriptURL: path.join(this.options.publicFilePath),
           }
 
           result.loaders.push(`${path.join(__dirname, 'runtimeLoader.js')}?${JSON.stringify(data)}`)
@@ -169,7 +176,8 @@ export default class ServiceWorkerPlugin {
     assets = validatePaths(assets, this.options)
 
     let minify;
-    if (Number(webpack.version[0]) >= 4) {
+
+    if (Number(webpack.version) >= 4) {
       minify = compiler.options.optimization && compiler.options.optimization.minimize
     } else {
       minify = (compiler.options.plugins || []).some(plugin => {
